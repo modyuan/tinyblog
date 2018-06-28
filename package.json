@@ -1,0 +1,25 @@
+{
+  "name": "tinyblog",
+  "version": "0.0.1",
+  "author": "yuansu <idgensou@gmail.com>",
+  "keywords": [
+    "blog",
+    "tiny"
+  ],
+  "homepage": "https://github.com/yuansushow/tinyblog",
+  "bugs": "https://github.com/yuansushow/tinyblog/issues",
+  "license": "MIT",
+  "dependencies": {
+    "sqlite3": "^4.0.1"
+  },
+  "config": {
+    "DBPath": "default_DB.db",
+    "apiport": 7602,
+    "webport": 8000
+  },
+  "scripts": {
+    "start": "node main.js",
+    "debug":"node %NODE_DEBUG_OPTION% main.js",
+    "init":"node initDB.js"
+  }
+}
