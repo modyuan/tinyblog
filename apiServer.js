@@ -4,15 +4,15 @@ const api = require('./api');
 const db = require('./db')
 
 exports.run = runApiServer;
-
+const port = process.env.npm_package_config_apiport;
 
 function unsupportedApi(response) {
     response.writeHead(404, {'Content-Type': 'application/json'});
     response.end("{'Error':'Unsupported API method'}");
 }
 
-function runApiServer(port) {
-    if (!port) port = process.env.npm_package_config_apiport;
+function runApiServer() {
+
     db.connDB().then(() => {
         console.error("Linked to DB")
     })
@@ -83,7 +83,7 @@ function runApiServer(port) {
     });
     //server.on('error'(err))
     server.listen(port);
-    console.log("API server is running at http://127.0.0.1:" + port.toString());
+    console.error("API server is running at http://127.0.0.1:" + port.toString());
 }
 
 

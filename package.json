@@ -10,16 +10,18 @@
   "bugs": "https://github.com/yuansushow/tinyblog/issues",
   "license": "MIT",
   "dependencies": {
-    "sqlite3": "^4.0.1"
+    "sqlite3": "^4.0.1",
+    "uuid": "^3.3.0"
   },
   "config": {
     "DBPath": "default_DB.db",
     "apiport": 7602,
-    "webport": 8000
+    "webport": 8000,
+    "passwd": "darkflamemaster"
   },
   "scripts": {
     "start": "node main.js",
-    "debug":"node %NODE_DEBUG_OPTION% main.js",
-    "init":"node initDB.js"
+    "debug": "node %NODE_DEBUG_OPTION% main.js",
+    "init": "node initDB.js"
   }
 }

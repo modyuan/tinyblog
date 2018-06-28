@@ -1,3 +1,5 @@
 const apiserver = require("./apiServer");
+const webserver =require("./webServer");
 
-apiserver.run(80);
+apiserver.run();
+webserver.run();
