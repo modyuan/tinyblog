@@ -7,9 +7,9 @@ const globalSession = {};//{uid:{user:xx,time:xxx},uid2....}
 
 setInterval(() => {
     let now = (new Date()).getTime();
-    for (let id in globalSession) {
+    for (var id in globalSession) {
         if (now - globalSession[id].time > sessionExpiration) {
-            console.log("delete session. uid:"+id);
+            console.log("delete session -> uid:"+id);
             delete globalSession[id];
         }
     }
@@ -21,7 +21,8 @@ module.exports = {
         return new Promise(function (resolve, reject) {
             if (!user || user.length === 0) user = '匿名';
             let id = uuid();
-            globalSession.id = {user: user, time: (new Date()).getTime()};
+            globalSession[id] = {user: user, time: (new Date()).getTime()};
+            console.log("add session -> uuid:"+id);
             resolve(id);
         });
 
@@ -30,8 +31,8 @@ module.exports = {
         return new Promise(function (resolve, reject) {
             if (globalSession.hasOwnProperty(id)) {
                 //when session is used, update the expiration time
-                globalSession.id.time = (new Date()).getTime();
-                resolve(globalSession.id.user);
+                globalSession[id].time = (new Date()).getTime();
+                resolve(globalSession[id].user);
             } else {
                 reject();
             }
@@ -40,7 +41,7 @@ module.exports = {
     deleteUserById: function (id) {
         return new Promise(function (resolve, reject) {
             if (globalSession.hasOwnProperty(id)) {
-                delete globalSession.id;
+                delete globalSession[id];
             } else {
                 reject();
             }

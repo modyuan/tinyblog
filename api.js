@@ -25,7 +25,7 @@ function md5(text) {
 
 module.exports = {
     apiList: ['getArticleList', 'getArticleSum', 'getArticleById'
-        , 'addArticle', 'updateArticle', 'delArticle', 'login','logout'],
+        , 'addArticle', 'updateArticle', 'delArticle', 'login', 'logout'],
     //get
     getArticleList: getArticleList,
     getArticleSum: getArticleSum,
@@ -44,18 +44,16 @@ module.exports = {
 
 //GET
 function getArticleList(request, response) {
-    var num = url.parse(request.url, true).query.num;
+    let num = url.parse(request.url, true).query.num;
     if (!num) num = 0;
-    response.setHeader('Set-Cookie', 'uuid=2333333333333333BBBB; Max-Age='+
-        session.cookieExpiration / 1000 /*+";HttpOnly"*/);
     db.getArticleList(num)
-        .then((rows => {
+        .then(rows => {
             response.writeHead(200, jsonHeader);
             response.end(JSON.stringify(rows));
-        }))
-        .catch((err) => {
+        })
+        .catch(err => {
                 response.writeHead(500, jsonHeader);
-                response.end(JSON.stringify(err));
+                response.end({'Error': 'SQL error', 'Detail': JSON.stringify(err)});
             }
         );
 }
@@ -63,12 +61,12 @@ function getArticleList(request, response) {
 //GET
 function getArticleSum(request, response) {
     db.getArticleList()
-        .then((rows => {
-            var sum = rows.length;
+        .then(rows => {
+            let sum = rows.length;
             response.writeHead(200, jsonHeader);
             response.end(util.format('{"sum":%d}', sum));
-        }))
-        .catch((err) => {
+        })
+        .catch(err => {
                 response.writeHead(500, jsonHeader);
                 response.end({'Error': 'SQL error', 'Detail': JSON.stringify(err)});
             }
@@ -77,7 +75,7 @@ function getArticleSum(request, response) {
 
 //GET
 function getArticleById(request, response) {
-    var query = url.parse(request.url, true).query;
+    let query = url.parse(request.url, true).query;
     db.getArticleById(query["id"])
         .then(msg => {
             response.writeHead(200, jsonHeader);
@@ -164,8 +162,10 @@ function login(request, response, data) {
     if (query.user !== undefined && query.passwd !== undefined
         && query.user === myuser && query.passwd === hashedPassword) {
         session.createByUser(query.user).then((uuid) => {
+            response.setHeader("Set-Cookie","uuid="+uuid+"; Path=/; Max-Age="+session.cookieExpiration/1000);
             response.writeHead(200, jsonHeader);
-            response.end(JSON.stringify({uuid:uuid,"Max-Age":session.cookieExpiration}));
+
+            response.end(JSON.stringify({uuid: uuid, "Max-Age": session.cookieExpiration/1000}));
         });
 
     } else {//user or password wrong.
@@ -180,13 +180,13 @@ function logout(request, response) {
     logined(request)
         .then((user, id) => {
             session.deleteUserById(id);
-            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0');
+            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0; Path=/');
             response.writeHead(200);
             response.end();
 
         })
         .catch(() => {
-            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0');
+            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0; Path=/');
             response.writeHead(403);
             response.end();
         });
@@ -195,22 +195,27 @@ function logout(request, response) {
 //serve for other API
 function logined(request) {
     return new Promise(function (resolve, reject) {
-        if (request.headers.Cookie) {
-            let cookie = session.parseCookie(request.headers.Cookie);
+        if (request.headers.cookie) {
+            let cookie = session.parseCookie(request.headers.cookie);
             if (cookie.uuid) {
-                seesion.getUserById(cookie.uuid)
-                    .then((user) => resolve(user, id))
-                    .catch(() =>  reject());
+                console.log(cookie.uuid);
+                session.getUserById(cookie.uuid)
+                    .then((user) => resolve(user, cookie.uuid))
+                    .catch(() => reject());
+            }else{
+                reject();
             }
+        }else{
+            reject();
         }
-        reject();
+
     });
 }
 
 //DELETE
 function delArticle(request, response) {
     logined(request).then(() => {
-        var id = url.parse(request.url, true).query.id;
+        let id = url.parse(request.url, true).query.id;
         if (isNaN(id)) {
             response.writeHead(400, jsonHeader);
             response.end("{'Error':'Invalid parameter'}");
