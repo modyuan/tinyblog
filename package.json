@@ -15,8 +15,8 @@
   },
   "config": {
     "DBPath": "default_DB.db",
-    "apiport": 7602,
-    "webport": 8000,
+    "port": 80,
+    "user": "yuansu",
     "passwd": "darkflamemaster"
   },
   "scripts": {

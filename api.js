@@ -5,31 +5,56 @@ const db = require("./db.js");
 const util = require("util");
 const url = require("url");
 const querystring = require('querystring');
-//get
-exports.getArticleList = getArticleList;
-exports.getArticleSum = getArticleSum;
-exports.getArticleById = getArticleById;
+const session = require('./session.js');
+const router = require('./router.js');
+const uuid = require('uuid/v1');
+const crypto = require('crypto');
 
-//post
-exports.addArticle = addArticle;
-exports.updateArticle = updateArticle;
 
-//delete
-exports.delArticle = delArticle;
-exports.apiList = ['getArticleList', 'getArticleSum', 'getArticleById'
-    , 'addArticle', 'updateArticle', 'delArticle'];
+const salt = uuid();
+const hashedPassword = '123456';//md5(salt + process.env.npm_package_config_passwd);
+const myuser = process.env.npm_package_config_user;
+const jsonHeader = {'Content-Type': 'application/json'};
+
+function md5(text) {
+    var hasher = crypto.createHash("md5");
+    hasher.update(text);
+    return hasher.digest('hex');
+}
+
+
+module.exports = {
+    apiList: ['getArticleList', 'getArticleSum', 'getArticleById'
+        , 'addArticle', 'updateArticle', 'delArticle', 'login','logout'],
+    //get
+    getArticleList: getArticleList,
+    getArticleSum: getArticleSum,
+    getArticleById: getArticleById,
+
+    //post
+    addArticle: addArticle,
+    updateArticle: updateArticle,
+
+    //delete
+    delArticle: delArticle,
+    login: login,
+    logout: logout
+};
+
 
 //GET
 function getArticleList(request, response) {
-    var num = url.parse(request.url,true).query.num;
-    if (!num) num=0;
+    var num = url.parse(request.url, true).query.num;
+    if (!num) num = 0;
+    response.setHeader('Set-Cookie', 'uuid=2333333333333333BBBB; Max-Age='+
+        session.cookieExpiration / 1000 /*+";HttpOnly"*/);
     db.getArticleList(num)
         .then((rows => {
-            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.writeHead(200, jsonHeader);
             response.end(JSON.stringify(rows));
         }))
         .catch((err) => {
-                response.writeHead(500, {'Content-Type': 'application/json'});
+                response.writeHead(500, jsonHeader);
                 response.end(JSON.stringify(err));
             }
         );
@@ -40,14 +65,12 @@ function getArticleSum(request, response) {
     db.getArticleList()
         .then((rows => {
             var sum = rows.length;
-            console.log("sum:"+sum);
-
-            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.writeHead(200, jsonHeader);
             response.end(util.format('{"sum":%d}', sum));
         }))
         .catch((err) => {
-                response.writeHead(500, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify(err));
+                response.writeHead(500, jsonHeader);
+                response.end({'Error': 'SQL error', 'Detail': JSON.stringify(err)});
             }
         );
 }
@@ -57,16 +80,16 @@ function getArticleById(request, response) {
     var query = url.parse(request.url, true).query;
     db.getArticleById(query["id"])
         .then(msg => {
-            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.writeHead(200, jsonHeader);
             response.end(JSON.stringify(msg));
         })
         .catch(err => {
             if (!err) {
-                response.writeHead(404, {'Content-Type': 'application/json'});
+                response.writeHead(404, jsonHeader);
                 response.end(JSON.stringify({'Error': 'Can not find the article.'}));
-            }else {
-                response.writeHead(500, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify(err)); //SQL error
+            } else {
+                response.writeHead(500, jsonHeader);
+                response.end({'Error': 'SQL error', 'Detail': JSON.stringify(err)}); //SQL error
             }
 
         })
@@ -75,67 +98,139 @@ function getArticleById(request, response) {
 //POST
 //need extra var data of all client post
 function addArticle(request, response, data) {
-    var query = querystring.parse(data);
-    if (query.title!=undefined && query.content != undefined
-        && query.title.length > 0 && query.content.length > 0) {
-        db.addArticle(query.title, query.content)
-            .then(() => {
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end("");
-            })
-            .catch((err) => {
-                response.writeHead(500, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify(err));
-            });
+    logined(request)
+        .then(() => {
+            let query = querystring.parse(data);
+            if (query.title !== undefined && query.content !== undefined
+                && query.title.length > 0 && query.content.length > 0) {
+                db.addArticle(query.title, query.content)
+                    .then(() => {
+                        response.writeHead(200, jsonHeader);
+                        response.end("");
+                    })
+                    .catch((err) => {
+                        response.writeHead(500, jsonHeader);
+                        response.end(JSON.stringify(err));
+                    });
 
-    } else {
-        response.writeHead(400, {'Content-Type': 'application/json'});
-        response.end("{'Error':'Invalid parameter'}");
-    }
-
+            } else {
+                response.writeHead(400, jsonHeader);
+                response.end("{'Error':'Invalid parameter'}");
+            }
+        })
+        .catch(() => {
+            response.writeHead(403);
+            response.end();
+        })
 
 }
 
 //POST
 //need extra var data of all client post
 function updateArticle(request, response, data) {
-    var query = querystring.parse(data);
-    if (query.title!=undefined && query.content!=undefined && query.id!=undefined
-        && query.title.length > 0 && query.content.length > 0 && query.id.length>0) {
-        db.updateArticle(query.id, query.title, query.content)
-            .then(() => {
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end("");
-            })
-            .catch((err) => {
-                response.writeHead(500, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify(err));
-            });
+    logined(request)
+        .then(() => {
+            let query = querystring.parse(data);
+            if (query.title !== undefined && query.content !== undefined && query.id !== undefined
+                && query.title.length > 0 && query.content.length > 0 && query.id.length > 0) {
+                db.updateArticle(query.id, query.title, query.content)
+                    .then(() => {
+                        response.writeHead(200);
+                        response.end();
+                    })
+                    .catch((err) => {
+                        response.writeHead(500, jsonHeader);
+                        response.end({'Error': 'SQL error', 'Detail': JSON.stringify(err)});
+                    });
 
-    } else {
-        response.writeHead(400, {'Content-Type': 'application/json'});
-        response.end("{'Error':'Invalid parameter'}");
+            } else {
+                response.writeHead(400, jsonHeader);
+                response.end("{'Error':'Invalid parameter'}");
+            }
+
+        })
+        .catch(() => {
+            response.writeHead(403);
+            response.end();
+        });
+
+
+}
+
+//TODO：https
+//POST
+function login(request, response, data) {
+    var query = querystring.parse(data);
+    if (query.user !== undefined && query.passwd !== undefined
+        && query.user === myuser && query.passwd === hashedPassword) {
+        session.createByUser(query.user).then((uuid) => {
+            response.writeHead(200, jsonHeader);
+            response.end(JSON.stringify({uuid:uuid,"Max-Age":session.cookieExpiration}));
+        });
+
+    } else {//user or password wrong.
+        response.writeHead(400, jsonHeader);
+        response.end('{"Error":"Wrong username or password!"}');
     }
 
 }
 
+//GET
+function logout(request, response) {
+    logined(request)
+        .then((user, id) => {
+            session.deleteUserById(id);
+            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0');
+            response.writeHead(200);
+            response.end();
+
+        })
+        .catch(() => {
+            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0');
+            response.writeHead(403);
+            response.end();
+        });
+}
+
+//serve for other API
+function logined(request) {
+    return new Promise(function (resolve, reject) {
+        if (request.headers.Cookie) {
+            let cookie = session.parseCookie(request.headers.Cookie);
+            if (cookie.uuid) {
+                seesion.getUserById(cookie.uuid)
+                    .then((user) => resolve(user, id))
+                    .catch(() =>  reject());
+            }
+        }
+        reject();
+    });
+}
+
 //DELETE
 function delArticle(request, response) {
-    var id = url.parse(request.url,true).query.id;
-    if (isNaN(id)){
-        response.writeHead(400, {'Content-Type': 'application/json'});
-        response.end("{'Error':'Invalid parameter'}");
-        return;
-    }
-    db.delArticle(id)
-        .then(() => {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end();
+    logined(request).then(() => {
+        var id = url.parse(request.url, true).query.id;
+        if (isNaN(id)) {
+            response.writeHead(400, jsonHeader);
+            response.end("{'Error':'Invalid parameter'}");
+            return;
+        }
+        db.delArticle(id)
+            .then(() => {
+                response.writeHead(200, jsonHeader);
+                response.end();
+            })
+            .catch((err) => {
+                    var code = (err.type === 0 ? 500 : 404);
+                    response.writeHead(code, jsonHeader);
+                    response.end(JSON.stringify(err));
+                }
+            );
+    })
+        .catch(() => {
+            response.writeHead(403, jsonHeader);
+            response.end("{'Error':'Not logged in'}");
         })
-        .catch((err) => {
-                var code = (err.type === 0 ? 500 : 404);
-                response.writeHead(code, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify(err));
-            }
-        );
+
 }
