@@ -162,10 +162,9 @@ function login(request, response, data) {
     if (query.user !== undefined && query.passwd !== undefined
         && query.user === myuser && query.passwd === hashedPassword) {
         session.createByUser(query.user).then((uuid) => {
-            response.setHeader("Set-Cookie","uuid="+uuid+"; Path=/; Max-Age="+session.cookieExpiration/1000);
-            response.writeHead(200, jsonHeader);
-
-            response.end(JSON.stringify({uuid: uuid, "Max-Age": session.cookieExpiration/1000}));
+            response.setHeader("Set-Cookie","uuid="+uuid+"; Path=/; Max-Age="+session.cookieExpiration/1000+"; HttpOnly");
+            response.writeHead(200);
+            response.end();
         });
 
     } else {//user or password wrong.
@@ -180,13 +179,13 @@ function logout(request, response) {
     logined(request)
         .then((user, id) => {
             session.deleteUserById(id);
-            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0; Path=/');
+            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0; Path=/; HttpOnly');
             response.writeHead(200);
             response.end();
 
         })
         .catch(() => {
-            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0; Path=/');
+            response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0; Path=/; HttpOnly');
             response.writeHead(403);
             response.end();
         });

@@ -1,28 +1,30 @@
 const uuid = require("uuid/v1");
 
 
-const sessionExpiration = 60 * 1000; // 1 minute
-const cookieExpiration = 1000 * 60 * 60;// 1 hour
+const sessionExpiration = 10 * 60 * 1000; // 2 minute
+const cookieExpiration = 1000 * 60 * 10;// 2 minute
 const globalSession = {};//{uid:{user:xx,time:xxx},uid2....}
 
 setInterval(() => {
     let now = (new Date()).getTime();
     for (var id in globalSession) {
         if (now - globalSession[id].time > sessionExpiration) {
-            console.log("delete session -> uid:"+id);
+            console.log("delete session -> uid:" + id);
             delete globalSession[id];
         }
     }
 }, 1000 * 10); //check every 10s.
 
+
+//TODO: all a function of refreshCookie
 module.exports = {
-    cookieExpiration:cookieExpiration,
+    cookieExpiration: cookieExpiration,
     createByUser: function (user) {
         return new Promise(function (resolve, reject) {
             if (!user || user.length === 0) user = '匿名';
             let id = uuid();
             globalSession[id] = {user: user, time: (new Date()).getTime()};
-            console.log("add session -> uuid:"+id);
+            console.log("add session -> uuid:" + id);
             resolve(id);
         });
 
@@ -47,17 +49,17 @@ module.exports = {
             }
         });
     },
-    parseCookie:function(c){
+    parseCookie: function (c) {
         var c2 = c.split(';');
-        var out={};
-        for(let i=0;i<c2.length;i++){
-            c2[i]=c2[i].split('=');
-            if (c2[i][0]===''){
+        var out = {};
+        for (let i = 0; i < c2.length; i++) {
+            c2[i] = c2[i].split('=');
+            if (c2[i][0].trim() === '') {
                 continue;
-            }else if(c2[i].length===1){
-                out[c2[i][0]]='';
-            }else{
-                out[c2[i][0]]=c2[i][1];
+            } else if (c2[i].length === 1) {
+                out[c2[i][0].trim()] = '';
+            } else {
+                out[c2[i][0].trim()] = c2[i][1].trim();
             }
 
         }
