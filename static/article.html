@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -7,17 +7,141 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
     <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/article.css">
     <title>文章页面</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
-        var id=document.location.search.match(/\?id=(\d+)/);
-        if (id){
-            id=id[1];
-        }else{
-            id=-1;
+        var id = document.location.search.match(/\?id=(\d+)/);
+        if (id) {
+            id = id[1];
+        } else {
+            location.href = "/404.html?url=" + encodeURIComponent(document.location.pathname+document.location.search);
         }
+
+        document.ready = function (callback) {
+            document.addEventListener('DOMContentLoaded', function () {
+                document.removeEventListener('DOMContentLoaded', arguments.callee, false);
+                callback();
+            }, false)
+        };
+        document.ready(function () {
+            var nav = new Vue({
+                el: "#nav",
+                data: {
+                    logined: false
+                },
+                methods: {
+                    gotoIndex: function () {
+                        location.href = "/";
+                    },
+                    gotoLogin: function () {
+                        if(nav.logined){
+                            window.fetch("/api/logout",{credentials:"same-origin"})
+                                .then(()=>{
+                                    nav.logined=false;
+                                    alert("已经登出！")
+                                });
+                        }else{
+                            location.href = "/login.html";
+                        }
+
+                    }
+                }
+            });
+
+            var article = new Vue({
+                el: "#right_side",
+                data: {
+                    title: "",
+                    content: "",
+                    date: "",
+                    id: 0,
+                    show:false
+                },
+                computed:{
+                    parseDate:function(){
+                        let a=new Date(this.date);
+                        return a.toLocaleDateString()+" "+a.getHours()+":"+a.getMinutes()+":"+a.getSeconds();
+                    }
+                },
+                methods:{
+                    showEdit:function(){
+                        this.show=true;
+                    },
+                    hiddenEdit:function(){
+                        this.show=false;
+                    },
+                    gotoEdit:function(){
+                        window.open("/editArticle.html");
+                    }
+
+                }
+
+
+            });
+
+            window.fetch("/api/getArticleById?id=" + id)
+                .then((res) => {
+                    if (res.ok)
+                        return res.json();
+                    else
+                        location.href = "/404.html?url=" + encodeURIComponent(document.location.pathname+document.location.search);
+
+                })
+                .then((j) => {
+                    article.title = j.TITLE;
+                    article.content = j.CONTENT;
+                    article.date = j.DATE;
+                    article.id = Number(j.ID);
+                    document.title = j.TITLE;
+                });
+            window.fetch("/api/login",{method:"post",credentials:"same-origin"})
+                .then((res)=>{
+                    nav.logined=res.ok;
+                });
+
+        });
+
+
     </script>
 </head>
 <body>
+
+<body class="body">
+<div id="nav" class="shadow">
+    <div id="nav-container">
+        <div @click="gotoIndex">首页</div>
+        <div id="login-btn" @click="gotoLogin">{{logined?'登出':'登录'}}</div>
+
+    </div>
+</div>
+<div id="main_wrapper" class="clearfix">
+
+    <div id="left_side" class="shadow card">
+        <img id="user-image" src="img/user-image.jpg" alt="user image">
+        <div id="user-info">
+            <p>这里是元素的博客。
+
+            </p>
+        </div>
+    </div>
+    <div id="right_side" class="shadow card">
+        <div id="article-title" v-on:mouseover="showEdit" @mouseout="hiddenEdit()">
+            {{title}}
+            <button id="edit" v-if="show">编辑文章</button>
+        </div>
+
+        <div id="article-content-wrap">
+            <div id="article-date" >{{parseDate}}</div>
+            <div id="article-content">
+                {{content}}
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
 
 </body>
 </html>

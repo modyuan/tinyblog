@@ -33,7 +33,7 @@ db.connDB()
 
 let server = http.createServer(function (request, response) {
     let body = '';
-    console.log(request.url);
+    console.log(request.url+" "+request.method);
 
     request.on('data', chunk => body += chunk);
 

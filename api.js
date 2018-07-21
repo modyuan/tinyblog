@@ -58,7 +58,7 @@ function getArticleList(request, response) {
         );
 }
 
-//GET
+//GET just for test
 function getArticleSum(request, response) {
     db.getArticleList()
         .then(rows => {
@@ -159,18 +159,26 @@ function updateArticle(request, response, data) {
 //POST
 function login(request, response, data) {
     var query = querystring.parse(data);
-    if (query.user !== undefined && query.passwd !== undefined
-        && query.user === myuser && query.passwd === hashedPassword) {
-        session.createByUser(query.user).then((uuid) => {
-            response.setHeader("Set-Cookie","uuid="+uuid+"; Path=/; Max-Age="+session.cookieExpiration/1000+"; HttpOnly");
-            response.writeHead(200);
-            response.end();
-        });
+    logined(request)
+        .then((user,id)=>{
+                response.writeHead(200,jsonHeader);
+                response.end(JSON.stringify({Message:"Has already logined.",user,logined:true}));
 
-    } else {//user or password wrong.
-        response.writeHead(400, jsonHeader);
-        response.end('{"Error":"Wrong username or password!"}');
-    }
+        })
+        .catch(()=>{
+            if (query.user !== undefined && query.passwd !== undefined
+                && query.user === myuser && query.passwd === hashedPassword) {
+                session.createByUser(query.user).then((uuid) => {
+                    response.setHeader("Set-Cookie","uuid="+uuid+"; Path=/; Max-Age="+session.cookieExpiration/1000+"; HttpOnly");
+                    response.writeHead(200);
+                    response.end(JSON.stringify({Message:"login succeed.",user:query.user,logined:false}));
+                });
+
+            } else {//user or password wrong.
+                response.writeHead(400, jsonHeader);
+                response.end('{"Error":"Wrong username or password!"} ');
+            }
+        })
 
 }
 

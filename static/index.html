@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -15,48 +15,69 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
         document.ready = function (callback) {
-            ///兼容FF,Google
             document.addEventListener('DOMContentLoaded', function () {
                 document.removeEventListener('DOMContentLoaded', arguments.callee, false);
                 callback();
             }, false)
         };
-        var gl;
-        document.ready(function(){
-            var articlelist=new Vue({
-                el:"#articlelist",
-                data:{
-                    items:[]
+        document.ready(function () {
+            var nav = new Vue({
+                el: "#nav",
+                data: {
+                    logined: false
                 },
-                methods:{
-                    parseDate: function(index){
-                        let a=new Date(this.items[index].DATE);
-                        return a.toLocaleDateString()+" "+a.getHours()+":"+a.getMinutes()+":"+a.getSeconds();
+                methods: {
+                    gotoIndex: function () {
+                        location.href = "/";
+                    },
+                    gotoLogin: function () {
+                        if(nav.logined){
+                            window.fetch("/api/logout",{credentials:"same-origin"})
+                                .then(()=>{
+                                    nav.logined=false;
+                                    alert("已经登出！")
+                                });
+                        }else{
+                            location.href = "/login.html";
+                        }
+
+                    }
+                }
+            });
+
+            var articlelist = new Vue({
+                el: "#articlelist",
+                data: {
+                    items: []
+                },
+                methods: {
+                    parseDate: function (index) {
+                        let a = new Date(this.items[index].DATE);
+                        return a.toLocaleDateString() + " " + a.getHours() + ":" + a.getMinutes() + ":" + a.getSeconds();
                     }
 
                 }
             });
             window.fetch("/api/getArticleList")
-                .then((res)=>{
+                .then((res) => {
                     return res.json();
                 })
-                .then((j)=>{
-                    gl=j;
-                    articlelist.items=j;
+                .then((j) => {
+                    articlelist.items = j;
                 });
-            gl=articlelist;
-        })
-
-
+            window.fetch("/api/login",{method:"post",credentials:"same-origin"})
+                .then((res)=>{
+                    nav.logined=res.ok;
+                });
+        });
     </script>
 
 </head>
 <body class="body">
 <div id="nav" class="shadow">
     <div id="nav-container">
-        <div>首页</div>
-        <div>文章列表</div>
-        <div id="login-btn">登录</div>
+        <div @click="gotoIndex">首页</div>
+        <div id="login-btn" @click="gotoLogin">{{logined?'登出':'登录'}}</div>
 
     </div>
 </div>

@@ -1,7 +1,35 @@
 <!DOCTYPE html>
+<html lang="zh">
 <head>
-    <title>404</title>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <title>找不到页面</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
 </head>
 <body>
-<h1>404 2333</h1>
+<h1 style="text-align: center">找不到页面</h1>
+<hr>
+<p id="place" style="text-align: center" v-once>{{ "URL: " + decodeURIComponent(url) }}</p>
+<script>
+    var url="";
+    if (document.location.search) {
+        url = document.location.search.match(/\?url=([^&]+)/);
+        if (url) {
+            url = url[1];
+        }
+    }
+    var a = new Vue({
+        el: "#place",
+        data: {
+            url: url
+        }
+
+    });
+
+
+</script>
 </body>
