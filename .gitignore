@@ -74,3 +74,6 @@ typings/
 
 # jetbrean IDE
 .idea
+
+#database for test
+default_DB.db
