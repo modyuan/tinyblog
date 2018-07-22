@@ -46,6 +46,35 @@
                         }
 
                     },
+                    gotoEdit:function(){
+                        window.open("/edit.html?id="+id);
+                    },
+                    delArticle:function(){
+                        if(!confirm("确定要删除文章吗？")){
+                            return;
+                        }
+                        window.fetch("/api/delArticle?id=" + id,{method:"DELETE",credentials:"same-origin"})
+                            .then(res=>{
+                                if(res.ok){
+                                    alert("删除文章成功！");
+                                    window.location.href="/";
+                                }else{
+                                    if(res.status===404){
+                                        alert("删除文章失败！文章不存在！");
+                                    }else if (res.status===403){
+                                        alert("删除文章失败！请先登录！");
+                                        window.location.href="/login.html";
+                                    }else{
+                                        alert("删除文章失败！服务器出错！");
+                                    }
+
+                                }
+                            })
+                            .catch(()=>{
+                                alert("删除文章失败！请检查网络！")
+                            })
+
+                    }
 
                 }
             });
@@ -65,17 +94,7 @@
                         return a.toLocaleDateString()+" "+a.getHours()+":"+a.getMinutes()+":"+a.getSeconds();
                     }
                 },
-                methods:{
-                    showEdit:function(){
-                        this.show=true;
-                    },
-                    hiddenEdit:function(){
-                        this.show=false;
-                    },
-                    gotoEdit:function(){
-                        window.open("/edit.html?id="+id);
-                    }
-                }
+
             });
 
             window.fetch("/api/getArticleById?id=" + id)
@@ -109,7 +128,8 @@
     <div id="nav-container">
         <div @click="gotoIndex">首页</div>
         <div id="login-btn" @click="gotoLogin">{{logined?'登出':'登录'}}</div>
-
+        <div @click="delArticle" v-if="logined" class="floatR" id="delArticle">删除文章</div>
+        <div @click="gotoEdit" v-if="logined" class="floatR">编辑文章</div>
     </div>
 </div>
 <div id="main_wrapper" class="clearfix">
@@ -123,9 +143,8 @@
         </div>
     </div>
     <div id="right_side" class="shadow card">
-        <div id="article-title" v-on:mouseover="showEdit" @mouseout="hiddenEdit()">
+        <div id="article-title" >
             {{title}}
-            <button id="edit" v-if="show" @click="gotoEdit">编辑文章</button>
         </div>
 
         <div id="article-content-wrap">

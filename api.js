@@ -105,7 +105,7 @@ function addArticle(request, response, data) {
                 db.addArticle(query.title, query.content)
                     .then((newid) => {
                         response.writeHead(200, jsonHeader);
-                        response.end(JSON.stringify({id:newid}));
+                        response.end(JSON.stringify({id:newid.ID}));
                     })
                     .catch((err) => {
                         response.writeHead(500, jsonHeader);

@@ -1,5 +1,9 @@
 
 
+div#nav div#newarticle {
+    float:right;
+}
+
 ul#articlelist{
     list-style: none;
 }

@@ -38,9 +38,12 @@
                                     alert("已经登出！")
                                 });
                         }else{
-                            location.href = "/login.html";
+                            window.location.href = "/login.html";
                         }
 
+                    },
+                    newArticle:function(){
+                        window.location.href="/edit.html?id=0";
                     }
                 }
             });
@@ -56,6 +59,11 @@
                         return a.toLocaleDateString() + " " + a.getHours() + ":" + a.getMinutes() + ":" + a.getSeconds();
                     }
 
+                },
+                computed:{
+                    empty:function(){
+                        return (this.items.length===0);
+                    }
                 }
             });
             window.fetch("/api/getArticleList")
@@ -77,8 +85,10 @@
 <div id="nav" class="shadow">
     <div id="nav-container">
         <div @click="gotoIndex">首页</div>
-        <div id="login-btn" @click="gotoLogin">{{logined?'登出':'登录'}}</div>
 
+
+        <div id="login-btn" @click="gotoLogin">{{logined?'登出':'登录'}}</div>
+        <div id="newarticle" @click="newArticle">写新文章</div>
     </div>
 </div>
 <div id="main_wrapper" class="clearfix">
@@ -93,6 +103,7 @@
     </div>
     <div id="right_side" class="shadow card">
         <ul id="articlelist">
+            <li v-if="empty"><span class="item-title">现在还没有文章......</span></li>
             <li v-for="(item, index) in items" class="clearfix">
                 <span class="item-date">{{ parseDate(index) }}</span>
                 <a v-bind:href="'/article.html?id='+item.ID"><span class="item-title">{{item.TITLE}}</span></a>

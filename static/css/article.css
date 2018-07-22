@@ -32,3 +32,11 @@ div#right_side div#article-date {
 div#right_side div#article-content{
     margin:15px 15px;
 }
+
+.floatR{
+    float: right;
+}
+
+div#delArticle:hover{
+    color:#e00;
+}

@@ -75,12 +75,13 @@
                             })
                                 .then(res => {
                                     if (res.ok) {
-                                        return res.json();
+                                        res.json().then((j)=>{
+                                            alert('上传成功！');
+                                            window.location.href = '/article.html?id=' + j.id;
+                                        });
+                                    }else{
+                                        alert('上传文章失败！请先登录！');
                                     }
-                                })
-                                .then(j => {
-                                    alert('上传成功！');
-                                    window.location.href = '/article.html?id=' + j.id;
                                 })
                                 .catch(() => {
                                     alert('上传文章失败！请检查网络！');
@@ -109,7 +110,7 @@
 
                 }
             });
-            if (id !== 0) {
+            if (id !== '0') {
                 window.fetch("/api/getArticleById?id=" + id)
                     .then((res) => {
                         if (res.ok)
