@@ -12,7 +12,7 @@ const crypto = require('crypto');
 
 
 const salt = uuid();
-const hashedPassword = '123456';//md5(salt + process.env.npm_package_config_passwd);
+const hashedPassword = md5(salt + process.env.npm_package_config_passwd);
 const myuser = process.env.npm_package_config_user;
 const jsonHeader = {'Content-Type': 'application/json'};
 
@@ -99,7 +99,12 @@ function getArticleById(request, response) {
 function addArticle(request, response, data) {
     logined(request)
         .then(() => {
-            let query=JSON.parse(data);
+            let query={};
+            try{
+                query=JSON.parse(data);
+            }catch(e){
+
+            }
             if (query.title !== undefined && query.content !== undefined
                 && query.title.length > 0 && query.content.length > 0) {
                 db.addArticle(query.title, query.content)
@@ -130,9 +135,12 @@ function addArticle(request, response, data) {
 function updateArticle(request, response, data) {
     logined(request)
         .then(() => {
-            let query=JSON.parse(data);
-            if (query.title !== undefined && query.content !== undefined && query.id !== undefined
-                && query.title.length > 0 && query.content.length > 0 && query.id > 0) {
+            let query={};
+            try{
+                query=JSON.parse(data);
+            }catch(e){}
+
+            if (query.title  && query.content  && query.id && query.id > 0) {
                 db.updateArticle(query.id, query.title, query.content)
                     .then(() => {
                         response.writeHead(200);
@@ -160,7 +168,12 @@ function updateArticle(request, response, data) {
 //TODO：https
 //POST
 function login(request, response, data) {
-    var query = querystring.parse(data);
+    var query={};
+    try{
+        query = JSON.parse(data);
+    }catch(e){
+
+    }
     logined(request)
         .then((user,id)=>{
                 response.writeHead(200,jsonHeader);
@@ -178,7 +191,7 @@ function login(request, response, data) {
 
             } else {//user or password wrong.
                 response.writeHead(400, jsonHeader);
-                response.end('{"Error":"Wrong username or password!"} ');
+                response.end(JSON.stringify({Error:"Wrong username or password!",salt:salt}));
             }
         })
 

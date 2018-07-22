@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/login.css">
     <!--dev version-->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="js/md5.js"></script>
     <script>
         document.ready = function (callback) {
             document.addEventListener('DOMContentLoaded', function () {
@@ -20,6 +21,13 @@
         };
 
         document.ready(function(){
+            var salt="";
+            window.fetch("/api/login",{method:"POST"})
+                .then(res=>{
+                    res.json().then(j=>{
+                        salt=j.salt;
+                    });
+                });
             var nav=new Vue({
                 el:"#nav",
                 methods:{
@@ -37,12 +45,10 @@
                 },
                 methods:{
                     check:function(){
-                        window.fetch("/api/login",{method:"post",body:'user='+ this.user +'&passwd='+ this.passwd,credentials: 'same-origin'})
+                        window.fetch("/api/login",{method:"post",body:JSON.stringify({user:this.user,passwd:md5(salt+this.passwd)}),credentials: 'same-origin'})
                             .then((res)=>{
-
                                 if(res.ok){
                                     window.history.go(-1);
-
                                 }else{
                                     this.user="";
                                     this.passwd="";
