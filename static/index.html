@@ -90,8 +90,8 @@
         <div @click="gotoIndex">首页</div>
 
 
-        <div id="login-btn" @click="gotoLogin">{{logined?'登出':'登录'}}</div>
-        <div id="newarticle" @click="newArticle" v-if="logined">写新文章</div>
+        <div id="login-btn" @click="gotoLogin">{{logged?'登出':'登录'}}</div>
+        <div id="newarticle" @click="newArticle" v-if="logged">写新文章</div>
     </div>
 </div>
 <div id="main_wrapper" class="clearfix">
