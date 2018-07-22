@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="css/edit.css">
     <title>编辑文章</title>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="js/refresh.js"></script>
     <script>
         var id = document.location.search.match(/\?id=(\d+)/);
         if (id) {
@@ -31,17 +32,17 @@
             var nav = new Vue({
                 el: "#nav",
                 data: {
-                    logined: false
+                    logged: false
                 },
                 methods: {
                     gotoIndex: function () {
                         location.href = "/";
                     },
                     gotoLogin: function () {
-                        if (nav.logined) {
+                        if (nav.logged) {
                             window.fetch("/api/logout", {credentials: "same-origin"})
                                 .then(() => {
-                                    nav.logined = false;
+                                    nav.logged = false;
                                     alert("已经登出！")
                                 });
                         } else {
@@ -131,7 +132,9 @@
 
             window.fetch("/api/login", {method: "post", credentials: "same-origin"})
                 .then((res) => {
-                    nav.logined = res.ok;
+                    nav.logged = res.ok;
+                    if (res.ok)
+                        refresh.start();
                 });
 
         });

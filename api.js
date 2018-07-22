@@ -38,7 +38,8 @@ module.exports = {
     //delete
     delArticle: delArticle,
     login: login,
-    logout: logout
+    logout: logout,
+
 };
 
 
@@ -97,7 +98,7 @@ function getArticleById(request, response) {
 //need extra var data of all client post
 //receive json {title:<title>,content:<content>}
 function addArticle(request, response, data) {
-    logined(request)
+    logged(request)
         .then(() => {
             let query={};
             try{
@@ -105,8 +106,7 @@ function addArticle(request, response, data) {
             }catch(e){
 
             }
-            if (query.title !== undefined && query.content !== undefined
-                && query.title.length > 0 && query.content.length > 0) {
+            if (query.title  && query.content) {
                 db.addArticle(query.title, query.content)
                     .then((newid) => {
                         response.writeHead(200, jsonHeader);
@@ -133,7 +133,7 @@ function addArticle(request, response, data) {
 //need extra var data of all client post
 //receive json {id:<id>,title:<title>,content:<content>}
 function updateArticle(request, response, data) {
-    logined(request)
+    logged(request)
         .then(() => {
             let query={};
             try{
@@ -168,25 +168,24 @@ function updateArticle(request, response, data) {
 //TODO：https
 //POST
 function login(request, response, data) {
-    var query={};
-    try{
-        query = JSON.parse(data);
-    }catch(e){
 
-    }
-    logined(request)
+    logged(request)
         .then((user,id)=>{
                 response.writeHead(200,jsonHeader);
-                response.end(JSON.stringify({Message:"Has already logined.",user,logined:true}));
+                response.end(JSON.stringify({Message:"Has already logged.",user,logged:true}));
 
         })
         .catch(()=>{
-            if (query.user !== undefined && query.passwd !== undefined
+            let query={};
+            try{
+                query = JSON.parse(data);
+            }catch(e){ }
+            if (query.user  && query.passwd
                 && query.user === myuser && query.passwd === hashedPassword) {
                 session.createByUser(query.user).then((uuid) => {
                     response.setHeader("Set-Cookie","uuid="+uuid+"; Path=/; Max-Age="+session.cookieExpiration/1000+"; HttpOnly");
                     response.writeHead(200);
-                    response.end(JSON.stringify({Message:"login succeed.",user:query.user,logined:false}));
+                    response.end(JSON.stringify({Message:"login succeed.",user:query.user,logged:false}));
                 });
 
             } else {//user or password wrong.
@@ -199,7 +198,7 @@ function login(request, response, data) {
 
 //GET
 function logout(request, response) {
-    logined(request)
+    logged(request)
         .then((user, id) => {
             session.deleteUserById(id);
             response.setHeader('Set-Cookie', 'uuid=0; Max-Age=0; Path=/; HttpOnly');
@@ -215,12 +214,11 @@ function logout(request, response) {
 }
 
 //serve for other API
-function logined(request) {
+function logged(request) {
     return new Promise(function (resolve, reject) {
         if (request.headers.cookie) {
             let cookie = session.parseCookie(request.headers.cookie);
             if (cookie.uuid) {
-                console.log(cookie.uuid);
                 session.getUserById(cookie.uuid)
                     .then((user) => resolve(user, cookie.uuid))
                     .catch(() => reject());
@@ -236,7 +234,7 @@ function logined(request) {
 
 //DELETE
 function delArticle(request, response) {
-    logined(request).then(() => {
+    logged(request).then(() => {
         let id = url.parse(request.url, true).query.id;
         if (isNaN(id)) {
             response.writeHead(400, jsonHeader);

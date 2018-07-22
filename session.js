@@ -1,8 +1,8 @@
 const uuid = require("uuid/v1");
 
 
-const sessionExpiration = 10 * 60 * 1000; // 2 minute
-const cookieExpiration = 1000 * 60 * 10;// 2 minute
+const sessionExpiration = 2 * 60 * 1000; // 10 minute
+const cookieExpiration = 2 * 60 * 1000;// 10 minute
 const globalSession = {};//{uid:{user:xx,time:xxx},uid2....}
 
 setInterval(() => {

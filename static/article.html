@@ -10,7 +10,9 @@
     <link rel="stylesheet" href="css/article.css">
     <title>文章页面</title>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="js/refresh.js"></script>
     <script>
+
         var id = document.location.search.match(/\?id=(\d+)/);
         if (id) {
             id = id[1];
@@ -28,17 +30,17 @@
             var nav = new Vue({
                 el: "#nav",
                 data: {
-                    logined: false
+                    logged: false
                 },
                 methods: {
                     gotoIndex: function () {
                         location.href = "/";
                     },
                     gotoLogin: function () {
-                        if(nav.logined){
+                        if(nav.logged){
                             window.fetch("/api/logout",{credentials:"same-origin"})
                                 .then(()=>{
-                                    nav.logined=false;
+                                    nav.logged=false;
                                     alert("已经登出！")
                                 });
                         }else{
@@ -113,7 +115,9 @@
                 });
             window.fetch("/api/login",{method:"post",credentials:"same-origin"})
                 .then((res)=>{
-                    nav.logined=res.ok;
+                    nav.logged=res.ok;
+                    if (res.ok)
+                    refresh.start();
                 });
 
         });
@@ -127,9 +131,9 @@
 <div id="nav" class="shadow">
     <div id="nav-container">
         <div @click="gotoIndex">首页</div>
-        <div id="login-btn" @click="gotoLogin">{{logined?'登出':'登录'}}</div>
-        <div @click="delArticle" v-if="logined" class="floatR" id="delArticle">删除文章</div>
-        <div @click="gotoEdit" v-if="logined" class="floatR">编辑文章</div>
+        <div id="login-btn" @click="gotoLogin">{{logged?'登出':'登录'}}</div>
+        <div @click="delArticle" v-if="logged" class="floatR" id="delArticle">删除文章</div>
+        <div @click="gotoEdit" v-if="logged" class="floatR">编辑文章</div>
     </div>
 </div>
 <div id="main_wrapper" class="clearfix">
