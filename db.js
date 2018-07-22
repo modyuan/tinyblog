@@ -147,7 +147,9 @@ function addArticle(title, content) {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve();
+                    globalDB.get(`SELECT ID FROM ARTICLES WHERE DATE = ?`,utc,(err,row)=>{
+                       resolve(row);
+                    });
                 }
             });
     });

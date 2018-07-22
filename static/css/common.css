@@ -5,6 +5,7 @@
     margin:0;
     padding: 0;
     box-sizing: border-box;
+    font-family: Menlo, "Ubuntu Mono", Consolas, "Courier New", "Microsoft Yahei", "Hiragino Sans GB", "WenQuanYi Micro Hei", sans-serif;
 }
 
 
@@ -95,4 +96,5 @@ div#left_side #user-info p{
 div#right_side {
     width: 770px;
     float: left;
+    position: relative;
 }

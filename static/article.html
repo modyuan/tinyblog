@@ -42,10 +42,11 @@
                                     alert("已经登出！")
                                 });
                         }else{
-                            location.href = "/login.html";
+                            window.location.href = "/login.html";
                         }
 
-                    }
+                    },
+
                 }
             });
 
@@ -72,12 +73,9 @@
                         this.show=false;
                     },
                     gotoEdit:function(){
-                        window.open("/editArticle.html");
+                        window.open("/edit.html?id="+id);
                     }
-
                 }
-
-
             });
 
             window.fetch("/api/getArticleById?id=" + id)
@@ -86,7 +84,6 @@
                         return res.json();
                     else
                         location.href = "/404.html?url=" + encodeURIComponent(document.location.pathname+document.location.search);
-
                 })
                 .then((j) => {
                     article.title = j.TITLE;
@@ -128,7 +125,7 @@
     <div id="right_side" class="shadow card">
         <div id="article-title" v-on:mouseover="showEdit" @mouseout="hiddenEdit()">
             {{title}}
-            <button id="edit" v-if="show">编辑文章</button>
+            <button id="edit" v-if="show" @click="gotoEdit">编辑文章</button>
         </div>
 
         <div id="article-content-wrap">

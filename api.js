@@ -95,16 +95,17 @@ function getArticleById(request, response) {
 
 //POST
 //need extra var data of all client post
+//receive json {title:<title>,content:<content>}
 function addArticle(request, response, data) {
     logined(request)
         .then(() => {
-            let query = querystring.parse(data);
+            let query=JSON.parse(data);
             if (query.title !== undefined && query.content !== undefined
                 && query.title.length > 0 && query.content.length > 0) {
                 db.addArticle(query.title, query.content)
-                    .then(() => {
+                    .then((newid) => {
                         response.writeHead(200, jsonHeader);
-                        response.end("");
+                        response.end(JSON.stringify({id:newid}));
                     })
                     .catch((err) => {
                         response.writeHead(500, jsonHeader);
@@ -125,12 +126,13 @@ function addArticle(request, response, data) {
 
 //POST
 //need extra var data of all client post
+//receive json {id:<id>,title:<title>,content:<content>}
 function updateArticle(request, response, data) {
     logined(request)
         .then(() => {
-            let query = querystring.parse(data);
+            let query=JSON.parse(data);
             if (query.title !== undefined && query.content !== undefined && query.id !== undefined
-                && query.title.length > 0 && query.content.length > 0 && query.id.length > 0) {
+                && query.title.length > 0 && query.content.length > 0 && query.id > 0) {
                 db.updateArticle(query.id, query.title, query.content)
                     .then(() => {
                         response.writeHead(200);
